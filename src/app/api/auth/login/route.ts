@@ -1,44 +1,30 @@
 import { NextResponse } from "next/server";
-import {prisma} from "@/lib/prisma"
-export async function POST (res: Request){
+import { prisma } from "@/lib/prisma";
+import { comparePassword } from "@/lib/auth";
 
+export async function POST(res: Request) {
+  const { email, password } = await res.json();
 
-    const {email, password} = await res.json()
+  const user = await prisma.user.findUnique({ where: { email } });
 
-    const user = await prisma.user.findUnique({where: {email}})
-   
+  if (!user) {
+    return NextResponse.json({
+      error: "Usuário não encontrado",
+      status: 400,
+    });
+  }
+  const valid = await comparePassword(password, user.password);
 
-
-    if (!user){
-
-        return NextResponse.json({
-
-            error:"Usuário não encontrado",
-            status: 400 
-        })
-    }
-    else if (user.password !== password){
-
-        return NextResponse.json({
-
-            error:"Senha incorreta",
-            status: 400 
-        })
-    
-    }
-
-    else{
-        
-        
-
-
-        return NextResponse.json({
-            
-            message: "Usuário logado com sucesso",
-            user,
-            status: 200
-
-        })
-    }
-
+  if (!valid) {
+    return NextResponse.json({
+      error: "senha incorreta",
+      status: 400,
+    });
+  }else {
+    return NextResponse.json({
+      error: "usuário logado",
+      user,
+      status: 200,
+    });
+  }
 }

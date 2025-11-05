@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { hashPassword } from "@/lib/auth";
 
 export async function POST(req: Request) {
   const { name, password, email } = await req.json();
@@ -16,10 +17,11 @@ export async function POST(req: Request) {
       status: 400,
     });
   } else {
+    const hashed = await hashPassword(password);
     const user = await prisma.user.create({
       data: {
         name,
-        password,
+        password:hashed,
         email,
       },
     });
